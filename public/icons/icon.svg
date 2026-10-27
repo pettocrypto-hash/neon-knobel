@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 2 2">
+<defs><radialGradient id="b"><stop offset="0" stop-color="#22104a"/><stop offset="1" stop-color="#05030c"/></radialGradient>
+<filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.03" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="-1" y="-1" width="2" height="2" rx="0.4" fill="url(#b)"/>
+<g transform="rotate(-12.605071492878112)" filter="url(#g)">
+<rect x="-0.5" y="-0.5" width="1" height="1" rx="0.16" fill="#120a2a" stroke="#00f0ff" stroke-width="0.06"/>
+<circle cx="0" cy="0" r="0.08" fill="#ff2bd6"/><circle cx="-0.24" cy="-0.24" r="0.08" fill="#ff2bd6"/><circle cx="0.24" cy="-0.24" r="0.08" fill="#ff2bd6"/><circle cx="-0.24" cy="0.24" r="0.08" fill="#ff2bd6"/><circle cx="0.24" cy="0.24" r="0.08" fill="#ff2bd6"/>
+</g>
+</svg>

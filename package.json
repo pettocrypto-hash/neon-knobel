@@ -1,0 +1,31 @@
+{
+  "name": "neon-knobel",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "NEON KNOBEL – Cyberpunk-Würfelspiel mit Spielblock, Online-Multiplayer PWA",
+  "scripts": {
+    "dev": "vite --host",
+    "start": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "@fontsource/orbitron": "^5.3.0",
+    "@fontsource/rajdhani": "^5.3.0",
+    "peerjs": "^1.5.5",
+    "qrcode": "^1.5.4",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5"
+  }
+}
