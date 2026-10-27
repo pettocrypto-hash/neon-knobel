@@ -60,7 +60,14 @@ interface Die {
 export interface DiceSceneOptions {
   quality: 'low' | 'medium' | 'high';
   reduceMotion: boolean;
+  design: 'neon' | 'clean';
 }
+
+/** Farben der Markierungen je Design (gehalten, eingefroren, Auswahl, Streak, Modul). */
+const MARKS = {
+  neon: { held: 0xb6ff3b, locked: 0x7fd8ff, select: 0xff2bd6, streak: 0x3b8bff, pulse: 0xff2bd6 },
+  clean: { held: 0x2563eb, locked: 0x0891b2, select: 0xdb2777, streak: 0xf59e0b, pulse: 0xdb2777 },
+};
 
 export class DiceScene {
   readonly canvas: HTMLCanvasElement;
@@ -79,6 +86,8 @@ export class DiceScene {
   private keyLight: THREE.PointLight;
   private fillLight: THREE.PointLight;
   private streakLight: THREE.PointLight;
+  private ambient: THREE.AmbientLight;
+  private sun: THREE.DirectionalLight;
   private halfW = 4;
   private halfD = 2.4;
   private raf = 0;
@@ -114,22 +123,23 @@ export class DiceScene {
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
 
-    this.scene.add(new THREE.AmbientLight(0x6a5aff, 0.35));
+    this.ambient = new THREE.AmbientLight(0x6a5aff, 0.35);
+    this.scene.add(this.ambient);
     this.keyLight = new THREE.PointLight(0x00f0ff, 40, 30, 1.6);
     this.keyLight.position.set(-4, 6, 3);
     this.fillLight = new THREE.PointLight(0xff2bd6, 30, 30, 1.6);
     this.fillLight.position.set(5, 5, -2);
     this.streakLight = new THREE.PointLight(0x2b7bff, 0, 14, 1.5);
     this.streakLight.position.set(0, 3, 0.5);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-    dir.position.set(2, 10, 6);
-    this.scene.add(this.keyLight, this.fillLight, this.streakLight, dir);
+    this.sun = new THREE.DirectionalLight(0xffffff, 0.9);
+    this.sun.position.set(2, 10, 6);
+    this.scene.add(this.keyLight, this.fillLight, this.streakLight, this.sun);
 
     this.geo = new RoundedBoxGeometry(1, 1, 1, opts.quality === 'low' ? 2 : 4, 0.12);
     this.buildFloor();
     this.buildMaterials();
     this.buildDice();
-    this.setupComposer();
+    this.applyLook();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(host);
@@ -170,12 +180,15 @@ export class DiceScene {
       m.emissiveMap?.dispose();
       m.dispose();
     }
-    const tex = makeFaceTextures(this.skin, this.cb);
+    const clean = this.opts.design === 'clean';
+    const tex = makeFaceTextures(this.skin, this.cb, clean);
     const aniso = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
     this.materials = FACE_VALUES.map((v) => {
       const { map, emissive } = tex[v - 1];
       map.anisotropy = aniso;
       emissive.anisotropy = aniso;
+      if (clean)
+        return new THREE.MeshStandardMaterial({ map, roughness: 0.42, metalness: 0, envMapIntensity: 0.55 });
       return new THREE.MeshStandardMaterial({
         map,
         emissiveMap: emissive,
@@ -233,7 +246,7 @@ export class DiceScene {
     this.composer?.dispose();
     this.composer = null;
     this.bloom = null;
-    if (this.opts.quality !== 'high') return;
+    if (this.opts.quality !== 'high' || this.opts.design === 'clean') return;
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.42, 0.35, 0.86);
@@ -282,6 +295,7 @@ export class DiceScene {
     this.skin = s;
     this.cb = colorblind;
     this.buildMaterials();
+    if (this.opts.design === 'clean') return;
     this.keyLight.color.set(s.edge);
     this.fillLight.color.set(s.pip);
   }
@@ -393,7 +407,48 @@ export class DiceScene {
     });
   }
 
+  /** Neon (dunkel, leuchtend) oder klar (heller Tisch, weiches Licht). */
+  setDesign(design: DiceSceneOptions['design']) {
+    if (design === this.opts.design) return;
+    this.opts.design = design;
+    this.buildMaterials();
+    this.applyLook();
+  }
+
+  private applyLook() {
+    const clean = this.opts.design === 'clean';
+    this.renderer.setClearColor(clean ? 0xe9e4d8 : 0x06030f, 1);
+    this.renderer.toneMappingExposure = clean ? 1.0 : 0.92;
+    const fm = this.floor.material as THREE.MeshStandardMaterial;
+    fm.color.set(clean ? 0xe9e4d8 : 0x0a0718);
+    fm.roughness = clean ? 0.95 : 0.65;
+    fm.metalness = clean ? 0 : 0.3;
+    fm.emissiveIntensity = clean ? 0 : 0.55;
+    const hz = this.holdZone.material as THREE.MeshBasicMaterial;
+    hz.color.set(clean ? 0x2563eb : 0xb6ff3b);
+    hz.opacity = clean ? 0.07 : 0.05;
+    hz.blending = clean ? THREE.NormalBlending : THREE.AdditiveBlending;
+    hz.needsUpdate = true;
+    for (const d of this.dice) {
+      for (const m of [d.ring.material as THREE.MeshBasicMaterial, d.flame.material as THREE.SpriteMaterial]) {
+        m.blending = clean ? THREE.NormalBlending : THREE.AdditiveBlending;
+        m.needsUpdate = true;
+      }
+      (d.shadow.material as THREE.MeshBasicMaterial).color.set(clean ? 0x6b5a3e : 0x000000);
+    }
+    this.ambient.color.set(clean ? 0xffffff : 0x6a5aff);
+    this.ambient.intensity = clean ? 1.1 : 0.35;
+    this.sun.intensity = clean ? 1.6 : 0.9;
+    this.keyLight.color.set(clean ? 0xfff4e0 : this.skin.edge);
+    this.fillLight.color.set(clean ? 0xe0ecff : this.skin.pip);
+    this.keyLight.intensity = clean ? 14 : 40;
+    this.fillLight.intensity = clean ? 10 : 30;
+    this.setupComposer();
+    this.resize();
+  }
+
   setLights(a: string, b: string) {
+    if (this.opts.design === 'clean') return;
     this.keyLight.color.set(a);
     this.fillLight.color.set(b);
   }
@@ -631,12 +686,14 @@ export class DiceScene {
     this.animateTweens(dt);
 
     const burn = this.streak >= 4 ? Math.min(1, (this.streak - 3) / 4) : 0;
-    this.streakLight.intensity = burn * (18 + Math.sin(this.time * 9) * 5);
+    const marks = MARKS[this.opts.design];
+    const clean = this.opts.design === 'clean';
+    this.streakLight.intensity = this.opts.design === 'clean' ? 0 : burn * (18 + Math.sin(this.time * 9) * 5);
     for (const d of this.dice) {
       d.mesh.position.copy(d.pos);
       const ringMat = d.ring.material as THREE.MeshBasicMaterial;
       const show = d.held || d.locked;
-      ringMat.color.set(d.locked ? 0x7fd8ff : this.selectMode ? 0xff2bd6 : 0xb6ff3b);
+      ringMat.color.set(d.locked ? marks.locked : this.selectMode ? marks.select : marks.held);
       const target = this.selectMode && !d.locked ? 0.55 + Math.sin(this.time * 8) * 0.3 : show ? 0.75 + Math.sin(this.time * 4 + d.pos.x) * 0.2 : 0;
       ringMat.opacity += (target - ringMat.opacity) * Math.min(1, dt * 12);
       d.ring.position.set(d.pos.x, 0.02, d.pos.z);
@@ -648,8 +705,8 @@ export class DiceScene {
       d.shadow.scale.setScalar(1 + h * 0.25);
       (d.shadow.material as THREE.MeshBasicMaterial).opacity = 0.55 / (1 + h * 0.8);
       const fm = d.flame.material as THREE.SpriteMaterial;
-      fm.opacity = burn * (0.45 + Math.sin(this.time * 13 + d.pos.x * 3) * 0.15) + d.highlight * 0.8;
-      fm.color.set(d.highlight > 0.05 ? 0xff2bd6 : 0x3b8bff);
+      fm.opacity = (burn * (0.45 + Math.sin(this.time * 13 + d.pos.x * 3) * 0.15) + d.highlight * 0.8) * (clean ? 0.6 : 1);
+      fm.color.set(d.highlight > 0.05 ? marks.pulse : marks.streak);
       d.flame.position.set(d.pos.x, d.pos.y + 0.25, d.pos.z);
       d.flame.scale.setScalar(1.6 + burn * 0.5 + Math.sin(this.time * 17 + d.pos.z) * 0.1 * burn + d.highlight * 0.8);
       d.highlight = Math.max(0, d.highlight - dt * 1.6);

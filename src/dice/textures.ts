@@ -169,8 +169,54 @@ function decorate(g: CanvasRenderingContext2D, skin: Skin, value: number, emissi
   g.restore();
 }
 
+/** Helle Variante eines Skins für das klare Design: heller Körper, dunkle Augen, kein Leuchten. */
+function cleanColors(skin: Skin) {
+  if (skin.id === 'neon') return { body: '#fbfaf6', pip: '#23262f', edge: '#d9d4c8' };
+  return { body: mix(skin.edge, '#ffffff', 0.84), pip: mix(skin.edge, '#000000', 0.62), edge: mix(skin.edge, '#ffffff', 0.55) };
+}
+
+function makeCleanFaces(skin: Skin, colorblind: boolean) {
+  const c = cleanColors(skin);
+  const out: { map: THREE.Texture; emissive: THREE.Texture }[] = [];
+  for (let v = 1; v <= 6; v++) {
+    const base = canvas();
+    const em = canvas();
+    const g = base.getContext('2d')!;
+    const S = SIZE;
+    const gr = g.createLinearGradient(0, 0, S, S);
+    gr.addColorStop(0, mix(c.body, '#ffffff', 0.5));
+    gr.addColorStop(1, c.body);
+    g.fillStyle = gr;
+    g.fillRect(0, 0, S, S);
+    g.strokeStyle = c.edge;
+    g.lineWidth = 6;
+    roundRect(g, 8, 8, S - 16, S - 16, 34);
+    g.stroke();
+    for (const [px, py] of PIPS[v]) {
+      const r = v === 1 ? 25 : 20;
+      const pg = g.createRadialGradient(px * S - 4, py * S - 4, 2, px * S, py * S, r);
+      pg.addColorStop(0, mix(c.pip, '#ffffff', 0.25));
+      pg.addColorStop(1, c.pip);
+      g.fillStyle = pg;
+      g.beginPath();
+      g.arc(px * S, py * S, r, 0, Math.PI * 2);
+      g.fill();
+    }
+    if (colorblind) {
+      g.fillStyle = c.pip;
+      g.font = '800 36px Inter, sans-serif';
+      g.textAlign = 'right';
+      g.fillText(String(v), S - 30, S - 26);
+    }
+    em.getContext('2d')!.fillRect(0, 0, S, S); // schwarz = kein Leuchten
+    out.push({ map: tex(base), emissive: tex(em) });
+  }
+  return out;
+}
+
 /** Je Augenzahl: Farbtextur + Leuchttextur. */
-export function makeFaceTextures(skin: Skin, colorblind: boolean) {
+export function makeFaceTextures(skin: Skin, colorblind: boolean, clean = false) {
+  if (clean) return makeCleanFaces(skin, colorblind);
   const out: { map: THREE.Texture; emissive: THREE.Texture }[] = [];
   for (let v = 1; v <= 6; v++) {
     const base = canvas();
@@ -281,6 +327,13 @@ function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number,
   g.arcTo(x, y + h, x, y, r);
   g.arcTo(x, y, x + w, y, r);
   g.closePath();
+}
+
+function mix(a: string, b: string, t: number) {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const ch = (s: number) => Math.round(((pa >> s) & 255) * (1 - t) + ((pb >> s) & 255) * t);
+  return `#${[16, 8, 0].map((s) => ch(s).toString(16).padStart(2, '0')).join('')}`;
 }
 
 function shade(hex: string, f: number) {

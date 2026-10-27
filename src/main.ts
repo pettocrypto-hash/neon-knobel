@@ -4,6 +4,9 @@ import '@fontsource/orbitron/latin-900.css';
 import '@fontsource/rajdhani/latin-500.css';
 import '@fontsource/rajdhani/latin-600.css';
 import '@fontsource/rajdhani/latin-700.css';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-800.css';
 import './styles.css';
 import { registerSW } from 'virtual:pwa-register';
 import { leaveSession, loadPointer, resumeSession } from './app/session';
@@ -16,8 +19,8 @@ import { lobbyScreen } from './ui/lobby';
 import { joinScreen, startScreen } from './ui/menus';
 
 applyDocumentSettings();
-fx().configure(settings.quality, settings.reduceMotion);
-onSettings(() => fx().configure(settings.quality, settings.reduceMotion));
+fx().configure(settings.quality, settings.reduceMotion, settings.design);
+onSettings(() => fx().configure(settings.quality, settings.reduceMotion, settings.design));
 
 // Echte Viewport-Höhe (mobile Browserleisten) als CSS-Variable.
 const setVh = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);

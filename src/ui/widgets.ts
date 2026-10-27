@@ -1,4 +1,5 @@
 import { skinById } from '../app/cosmetics';
+import { settings } from '../app/settings';
 import type { Look } from '../game/types';
 import { h } from './dom';
 
@@ -36,6 +37,14 @@ export function levelBar(level: number, pct: number, label?: string): HTMLElemen
 }
 
 export function logo(): HTMLElement {
+  if (settings.design === 'clean')
+    return h(
+      'div',
+      { class: 'logo' },
+      h('div', { class: 'logo-dice' }, dieFace(5, 'logo-die a'), dieFace(6, 'logo-die b'), dieFace(3, 'logo-die c')),
+      h('h1', { class: 'logo-title' }, 'Knobel'),
+      h('p', { class: 'logo-sub' }, 'Würfeln · Eintragen · Gewinnen'),
+    );
   return h(
     'div',
     { class: 'logo' },

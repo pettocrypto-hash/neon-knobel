@@ -188,6 +188,15 @@ export function settingsScreen(app: App): HTMLElement {
     h(
       'div',
       { class: 'panel' },
+      h('h3', { class: 'label' }, 'Design'),
+      segmented(
+        [
+          { value: 'clean', label: 'Klar', sub: 'hell & schlicht' },
+          { value: 'neon', label: 'Neon', sub: 'Cyberpunk' },
+        ],
+        settings.design,
+        (v) => updateSettings({ design: v as typeof settings.design }),
+      ),
       h('h3', { class: 'label' }, 'Darstellung & Barrierefreiheit'),
       toggle('Farbenblind-Modus', settings.colorblind, (v) => updateSettings({ colorblind: v }), 'Ziffern auf den Würfeln, Symbole statt nur Farben'),
       toggle('Weniger Bewegung', settings.reduceMotion, (v) => updateSettings({ reduceMotion: v }), 'Kein Wackeln, kürzere Würfel-Animation'),

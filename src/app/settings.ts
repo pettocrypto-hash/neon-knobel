@@ -1,4 +1,6 @@
 export type Quality = 'low' | 'medium' | 'high';
+/** Oberfläche: 'neon' = Cyberpunk, 'clean' = hell und schlicht. */
+export type Design = 'neon' | 'clean';
 
 export interface Settings {
   name: string;
@@ -17,6 +19,7 @@ export interface Settings {
   skin: string;
   theme: string;
   frame: string;
+  design: Design;
 }
 
 const KEY = 'neonknobel.settings';
@@ -41,6 +44,7 @@ function defaults(): Settings {
     skin: 'neon',
     theme: 'cyan',
     frame: 'basic',
+    design: 'neon',
   };
 }
 
@@ -79,6 +83,9 @@ export function applyDocumentSettings() {
   d.theme = settings.theme;
   d.cb = settings.colorblind ? '1' : '0';
   d.motion = settings.reduceMotion ? 'reduce' : 'full';
+  d.design = settings.design;
+  document.title = settings.design === 'clean' ? 'Knobel' : 'NEON KNOBEL';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.design === 'clean' ? '#f3f0e9' : '#05030c');
 }
 
 export function vibrate(pattern: number | number[]) {

@@ -34,6 +34,7 @@ Hinweis: Online-Spiele zwischen zwei Handys brauchen HTTPS. Lokal im WLAN klappt
 - **Beitreten**: Code eingeben oder den Link bzw. QR-Code öffnen.
 - **Würfeln**: Button, nach oben über die Würfel wischen oder das Handy schütteln. Würfel antippen hält sie fest.
 - **Eintragen**: Nach dem Wurf leuchten alle freien Felder mit ihren Punkten auf, das beste ist mit ★ markiert. Feld antippen und bestätigen.
+- **Design**: Oben rechts im Hauptmenü (oder unter **Optionen**) wechselst du zwischen **Neon** (Cyberpunk) und **Klar** (hell und schlicht).
 - **Verbindung weg?** Einfach weiterspielen bzw. die Seite neu öffnen. Alle Geräte verbinden sich automatisch wieder mit dem Raum.
 
 Die kompletten Regeln stehen im Spiel unter **Regeln**. Alle Spielwerte (Punkte, Bonus, Energie, Modulkosten, XP) stehen in [`src/config/rules.ts`](src/config/rules.ts). Warum etwas so gebaut ist, steht in [`ENTSCHEIDUNGEN.md`](ENTSCHEIDUNGEN.md).

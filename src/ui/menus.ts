@@ -36,6 +36,20 @@ export function startScreen(app: App): HTMLElement {
   const el = h(
     'section',
     { class: 'menu' },
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'design-toggle',
+        'aria-label': 'Design wechseln',
+        onclick: (() => {
+          audio.play('select');
+          updateSettings({ design: settings.design === 'clean' ? 'neon' : 'clean' });
+          app.go(startScreen);
+        }) as EventListener,
+      },
+      settings.design === 'clean' ? '✦ Neon' : '◐ Klar',
+    ),
     logo(),
     h(
       'div',

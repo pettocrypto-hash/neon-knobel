@@ -31,6 +31,7 @@ class FxLayer {
   private last = 0;
   private enabled = true;
   private ambient = true;
+  private light = false;
 
   constructor() {
     this.bg = document.createElement('canvas');
@@ -49,8 +50,10 @@ class FxLayer {
     requestAnimationFrame((t) => this.loop(t));
   }
 
-  configure(quality: string, reduceMotion: boolean) {
-    this.ambient = quality !== 'low' && !reduceMotion;
+  configure(quality: string, reduceMotion: boolean, design = 'neon') {
+    // Im hellen Design keine schwebenden Neon-Teilchen und keine additive Mischung
+    this.light = design === 'clean';
+    this.ambient = quality !== 'low' && !reduceMotion && !this.light;
     this.enabled = !reduceMotion || true;
     if (!this.ambient) this.bgc.clearRect(0, 0, this.w * this.dpr, this.h * this.dpr);
   }
@@ -131,7 +134,7 @@ class FxLayer {
     const f = this.fgc;
     f.clearRect(0, 0, this.w * d, this.h * d);
     if (!this.parts.length) return;
-    f.globalCompositeOperation = 'lighter';
+    f.globalCompositeOperation = this.light ? 'source-over' : 'lighter';
     this.parts = this.parts.filter((p) => {
       p.life += dt;
       if (p.life < 0) return true;
@@ -154,7 +157,7 @@ class FxLayer {
       f.globalAlpha = p.kind === 'confetti' ? Math.min(1, (1 - k) * 2) : 1 - k;
       f.fillStyle = p.color;
       f.shadowColor = p.color;
-      f.shadowBlur = p.kind === 'confetti' ? 0 : 10 * d;
+      f.shadowBlur = p.kind === 'confetti' || this.light ? 0 : 10 * d;
       if (p.kind === 'confetti') {
         f.save();
         f.translate(x * d, y * d);

@@ -81,7 +81,7 @@ export function gameScreen(app: App): HTMLElement & { cleanup?: () => void } {
   let disposed = false;
   let gameNo = -1;
 
-  const scene = new DiceScene(diceHost, { quality: settings.quality, reduceMotion: settings.reduceMotion });
+  const scene = new DiceScene(diceHost, { quality: settings.quality, reduceMotion: settings.reduceMotion, design: settings.design });
   scene.setSkin(settings.skin, settings.colorblind);
   const applyTheme = () => {
     const t = THEMES.find((x) => x.id === settings.theme) ?? THEMES[0];
@@ -774,6 +774,7 @@ export function gameScreen(app: App): HTMLElement & { cleanup?: () => void } {
   });
   const offSettings = onSettings(() => {
     scene.setQuality(settings.quality);
+    scene.setDesign(settings.design);
     applyTheme();
     render();
   });
